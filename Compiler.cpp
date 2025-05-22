@@ -314,6 +314,20 @@ private:
     }
 };
 
+bool inFunction = false;
+
+for (const auto& stmt : statements) {
+    if (auto fn = std::dynamic_pointer_cast<FunctionDef>(stmt)) {
+        inFunction = true;
+        analyze(fn->body);  // recursively walk inside
+        inFunction = false;
+    }
+    else if (auto ret = std::dynamic_pointer_cast<ReturnStatement>(stmt)) {
+        if (!inFunction)
+            throw std::runtime_error("Return statement used outside a function.");
+    }
+}
+
 //--------------------------------------------------
 // --- INTERMEDIATE REPRESENTATION EMITTER ---
 //--------------------------------------------------
