@@ -1,0 +1,11 @@
+Start maxLoop(n) {
+    i = 0;
+    total = 0;
+    while (i < n) {
+        total = total + i;
+        i = i + 1;
+    }
+    Return;
+}
+
+z = maxLoop(10);
