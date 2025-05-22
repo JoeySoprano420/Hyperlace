@@ -252,6 +252,7 @@ std::shared_ptr<Expression> parseFunctionCall(const std::string& name) {
     return std::make_shared<FunctionCall>(FunctionCall{name, args});
 }
 
+
 //--------------------------------------------------
 // --- MACRO ENGINE (C.I.A.M.S.) ---
 //--------------------------------------------------
@@ -607,6 +608,33 @@ void writeASTToXML(const std::vector<std::shared_ptr<Statement>>& statements, st
     }
     out << "</Program>\n";
 }
+
+else if (auto w = std::dynamic_pointer_cast<WhileLoop>(stmt)) {
+    out << "  <While>\n";
+    out << "    <Condition/>\n"; // TODO: render condition
+    out << "    <Body>\n";
+    writeASTToXML(w->body, out);
+    out << "    </Body>\n  </While>\n";
+}
+else if (auto f = std::dynamic_pointer_cast<ForLoop>(stmt)) {
+    out << "  <For>\n";
+    out << "    <Initializer/>\n"; // TODO: render init
+    out << "    <Condition/>\n";  // TODO: render condition
+    out << "    <Increment/>\n";  // TODO: render increment
+    out << "    <Body>\n";
+    writeASTToXML(f->body, out);
+    out << "    </Body>\n  </For>\n";
+}
+else if (auto fc = std::dynamic_pointer_cast<FunctionCall>(stmt)) {
+    out << "  <FunctionCall name=\"" << fc->functionName << "\">\n";
+    for (auto& arg : fc->arguments)
+        out << "    <Arg/>\n"; // TODO: render each argument
+    out << "  </FunctionCall>\n";
+}
+
+struct ReturnStatement : public Statement {
+    std::shared_ptr<Expression> returnValue; // optional
+};
 
 //--------------------------------------------------
 // --- MAIN: FULL COMPILER TEST HARNESS ---
