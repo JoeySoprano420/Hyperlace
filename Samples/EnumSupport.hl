@@ -5,3 +5,14 @@ Init Status {
 }
 
 s = Status.OK;
+
+
+OR
+
+
+Init Mode {
+    Sleep;
+    Awake;
+}
+
+m = Mode.Sleep;
