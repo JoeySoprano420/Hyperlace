@@ -102,6 +102,20 @@ struct FunctionCall : public Expression {
     std::vector<std::shared_ptr<Expression>> arguments;
 };
 
+struct StructDef : public Statement {
+    std::string name;
+    std::vector<std::string> fields;
+};
+
+struct StructInit : public Expression {
+    std::string structName;
+};
+
+struct FieldAccess : public Expression {
+    std::shared_ptr<Expression> object;
+    std::string field;
+};
+
 //--------------------------------------------------
 // --- PARSER IMPLEMENTATION ---
 //--------------------------------------------------
@@ -252,6 +266,28 @@ std::shared_ptr<Expression> parseFunctionCall(const std::string& name) {
     return std::make_shared<FunctionCall>(FunctionCall{name, args});
 }
 
+std::shared_ptr<Statement> parseStructDef() {
+    advance(); // Skip 'Init'
+    std::string name = expectIdentifier("Expected struct name.");
+    expect('{');
+    std::vector<std::string> fields;
+    while (!match('}')) {
+        fields.push_back(expectIdentifier("Expected field name."));
+        match(';');
+    }
+    return std::make_shared<StructDef>(StructDef{name, fields});
+}
+
+std::shared_ptr<Expression> parseStructInit(const std::string& name) {
+    expect('('); expect(')'); // e.g. Person()
+    return std::make_shared<StructInit>(StructInit{name});
+}
+
+std::shared_ptr<Expression> parseFieldAccess(std::shared_ptr<Expression> obj) {
+    expect('.'); // p.name
+    std::string field = expectIdentifier("Expected field name.");
+    return std::make_shared<FieldAccess>(FieldAccess{obj, field});
+}
 
 //--------------------------------------------------
 // --- MACRO ENGINE (C.I.A.M.S.) ---
