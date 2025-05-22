@@ -82,6 +82,25 @@ struct FunctionCall : public Expression {
     std::vector<std::shared_ptr<Expression>> arguments;
 };
 
+// While loop
+struct WhileLoop : public Statement {
+    std::shared_ptr<Expression> condition;
+    std::vector<std::shared_ptr<Statement>> body;
+};
+
+// For loop
+struct ForLoop : public Statement {
+    std::shared_ptr<Statement> initializer;
+    std::shared_ptr<Expression> condition;
+    std::shared_ptr<Statement> increment;
+    std::vector<std::shared_ptr<Statement>> body;
+};
+
+// Function Call
+struct FunctionCall : public Expression {
+    std::string functionName;
+    std::vector<std::shared_ptr<Expression>> arguments;
+};
 
 //--------------------------------------------------
 // --- PARSER IMPLEMENTATION ---
@@ -191,6 +210,46 @@ std::shared_ptr<Statement> parseIfStatement() {
         expect('}');
     }
     return std::make_shared<IfStatement>(IfStatement{condition, thenBranch, elseBranch});
+}
+std::shared_ptr<Statement> parseWhile() {
+    advance(); // skip 'while'
+    expect('(');
+    auto condition = parseExpression();
+    expect(')');
+    expect('{');
+    std::vector<std::shared_ptr<Statement>> body;
+    while (!check('}')) {
+        body.push_back(parseStatement());
+    }
+    expect('}');
+    return std::make_shared<WhileLoop>(WhileLoop{condition, body});
+}
+
+std::shared_ptr<Statement> parseFor() {
+    advance(); // skip 'for'
+    expect('(');
+    auto initializer = parseStatement();
+    auto condition = parseExpression();
+    expect(';');
+    auto increment = parseStatement();
+    expect(')');
+    expect('{');
+    std::vector<std::shared_ptr<Statement>> body;
+    while (!check('}')) {
+        body.push_back(parseStatement());
+    }
+    expect('}');
+    return std::make_shared<ForLoop>(ForLoop{initializer, condition, increment, body});
+}
+
+std::shared_ptr<Expression> parseFunctionCall(const std::string& name) {
+    advance(); // skip '('
+    std::vector<std::shared_ptr<Expression>> args;
+    while (!check(')')) {
+        args.push_back(parseExpression());
+        if (!match(')')) match(','); // handle comma-separated arguments
+    }
+    return std::make_shared<FunctionCall>(FunctionCall{name, args});
 }
 
 //--------------------------------------------------
