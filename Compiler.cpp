@@ -368,6 +368,28 @@ public:
     }
 };
 
+section .text
+global _start
+
+_start:
+    call myFunc
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+
+myFunc:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32              ; allocate local frame
+
+    ; [function body emitted here]
+
+.return:
+    mov rsp, rbp
+    pop rbp
+    ret
+
+
 //--------------------------------------------------
 // --- MAIN: FULL COMPILER TEST HARNESS ---
 //--------------------------------------------------
@@ -750,4 +772,15 @@ int main() {
 ";
     log.close();
     return 0;
+}
+
+
+# Emit Return Value (If any)
+
+if (auto ret = std::dynamic_pointer_cast<ReturnStatement>(stmt)) {
+    if (ret->returnValue) {
+        // emit code to evaluate expression into RAX
+        // e.g. mov rax, value
+    }
+    out << "    jmp .return\n";
 }
