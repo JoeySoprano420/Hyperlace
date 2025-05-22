@@ -1,0 +1,7 @@
+Init Status {
+    OK;
+    ERROR;
+    UNKNOWN;
+}
+
+s = Status.OK;
