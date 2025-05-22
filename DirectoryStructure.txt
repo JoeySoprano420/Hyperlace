@@ -1,0 +1,27 @@
+HyperlaceCompiler/
+├── lexer.cpp / lexer.h
+├── parser.cpp / parser.h
+├── ast.cpp / ast.h
+├── macro.cpp / macro.h
+├── analyzer.cpp / analyzer.h
+├── ir.cpp / ir.h
+├── codegen.cpp / codegen.h
+├── nasm_emitter.cpp / nasm_emitter.h
+├── runtime_stubs.asm
+├── main.cpp
+├── symbol_table.h
+├── error_reporter.h
+├── Makefile / build.bat
+├── samples/
+│   ├── hello.hl
+│   └── test.hl
+├── output/
+│   ├── hello.asm
+│   ├── hello.exe
+│   ├── hello.fir
+│   └── hello.log
+├── syntax/
+│   └── hyperlace.tmLanguage.json
+└── installers/
+    ├── installer.nsi (Windows)
+    └── install.sh (Unix)
