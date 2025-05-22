@@ -305,6 +305,12 @@ enum Precedence {
     PREC_PRIMARY
 };
 
+if (match(TokenType::PlusEq)) {
+    auto value = parseExpression();
+    return std::make_shared<Assignment>(varName,
+        std::make_shared<BinaryExpr>("+", readVar(varName), value));
+}
+
 //--------------------------------------------------
 // --- MACRO ENGINE (C.I.A.M.S.) ---
 //--------------------------------------------------
