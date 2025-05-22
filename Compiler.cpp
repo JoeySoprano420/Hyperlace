@@ -294,6 +294,17 @@ std::shared_ptr<Expression> parseFieldAccess(std::shared_ptr<Expression> obj) {
     return std::make_shared<FieldAccess>(FieldAccess{obj, field});
 }
 
+enum Precedence {
+    PREC_LOWEST,
+    PREC_ASSIGN,   // =
+    PREC_COND,     // ?:
+    PREC_SUM,      // + -
+    PREC_PRODUCT,  // * /
+    PREC_PREFIX,   // -x
+    PREC_CALL,     // ()
+    PREC_PRIMARY
+};
+
 //--------------------------------------------------
 // --- MACRO ENGINE (C.I.A.M.S.) ---
 //--------------------------------------------------
@@ -689,6 +700,12 @@ else if (auto fc = std::dynamic_pointer_cast<FunctionCall>(stmt)) {
 
 struct ReturnStatement : public Statement {
     std::shared_ptr<Expression> returnValue; // optional
+};
+
+struct TernaryExpr : public Expression {
+    std::shared_ptr<Expression> condition;
+    std::shared_ptr<Expression> thenExpr;
+    std::shared_ptr<Expression> elseExpr;
 };
 
 //--------------------------------------------------
