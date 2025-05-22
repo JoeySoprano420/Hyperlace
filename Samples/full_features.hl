@@ -1,0 +1,44 @@
+
+# Define an enum
+Init Mode {
+    Sleep;
+    Awake;
+    Alert;
+}
+
+# Define a struct
+Init Vec2 {
+    x;
+    y;
+}
+
+# Use the struct
+v = Vec2();
+v.x = 10;
+v.y = 5;
+
+# Use a ternary
+max = (v.x > v.y) ? v.x : v.y;
+
+# Compound assignment
+total = 0;
+total += max;
+
+# Use an enum
+m = Mode.Alert;
+
+# Function with control flow
+Start compute(input) {
+    if (input < 5) {
+        Return input * 2;
+    } else {
+        sum = 0;
+        for (i = 0; i < input; i = i + 1) {
+            sum += i;
+        }
+        Return sum;
+    }
+}
+
+# Use the function
+result = compute(total);
