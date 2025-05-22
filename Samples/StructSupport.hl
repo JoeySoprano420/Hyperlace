@@ -6,3 +6,16 @@ Init Person {
 p = Person();
 p.name = "Shay";
 p.age = 28;
+
+
+OR
+
+
+Init Vec2 {
+    x;
+    y;
+}
+
+v = Vec2();
+v.x = 5;
+v.y = 8;
