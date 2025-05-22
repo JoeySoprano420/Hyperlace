@@ -1,0 +1,8 @@
+Init Person {
+    name;
+    age;
+}
+
+p = Person();
+p.name = "Shay";
+p.age = 28;
