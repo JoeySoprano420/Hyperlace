@@ -62,6 +62,27 @@ public:
     IdentifierExpr(const std::string& n) : name(n) {}
 };
 
+// Function Definition
+struct FunctionDef : public Statement {
+    std::string name;
+    std::vector<std::string> params;
+    std::vector<std::shared_ptr<Statement>> body;
+};
+
+// If Statement
+struct IfStatement : public Statement {
+    std::shared_ptr<Expression> condition;
+    std::vector<std::shared_ptr<Statement>> thenBranch;
+    std::vector<std::shared_ptr<Statement>> elseBranch;
+};
+
+// Function Call
+struct FunctionCall : public Expression {
+    std::string name;
+    std::vector<std::shared_ptr<Expression>> arguments;
+};
+
+
 //--------------------------------------------------
 // --- PARSER IMPLEMENTATION ---
 //--------------------------------------------------
@@ -131,6 +152,46 @@ private:
         throw std::runtime_error("Invalid expression");
     }
 };
+
+std::shared_ptr<Statement> parseFunction() {
+    advance(); // Skip 'Start'
+    std::string name = expectIdentifier("Expected function name after Start");
+    expect('(');
+    std::vector<std::string> params;
+    while (!match(')')) {
+        params.push_back(expectIdentifier("Expected parameter name"));
+        match(','); // optional comma
+    }
+    expect('{');
+    std::vector<std::shared_ptr<Statement>> body;
+    while (!check('}')) {
+        body.push_back(parseStatement());
+    }
+    expect('}');
+    return std::make_shared<FunctionDef>(FunctionDef{name, params, body});
+}
+
+std::shared_ptr<Statement> parseIfStatement() {
+    advance(); // Skip 'if'
+    expect('(');
+    auto condition = parseExpression();
+    expect(')');
+    expect('{');
+    std::vector<std::shared_ptr<Statement>> thenBranch;
+    while (!check('}')) {
+        thenBranch.push_back(parseStatement());
+    }
+    expect('}');
+    std::vector<std::shared_ptr<Statement>> elseBranch;
+    if (matchKeyword("else")) {
+        expect('{');
+        while (!check('}')) {
+            elseBranch.push_back(parseStatement());
+        }
+        expect('}');
+    }
+    return std::make_shared<IfStatement>(IfStatement{condition, thenBranch, elseBranch});
+}
 
 //--------------------------------------------------
 // --- MACRO ENGINE (C.I.A.M.S.) ---
@@ -449,6 +510,44 @@ public:
 ";
     }
 };
+
+void writeASTToXML(const std::vector<std::shared_ptr<Statement>>& statements, std::ostream& out) {
+    out << "<Program>\n";
+    for (const auto& stmt : statements) {
+        if (auto fn = std::dynamic_pointer_cast<FunctionDef>(stmt)) {
+            out << "  <Function name=\"" << fn->name << "\">\n";
+            for (auto& param : fn->params)
+                out << "    <Param>" << param << "</Param>\n";
+            out << "    <Body>\n";
+            writeASTToXML(fn->body, out);
+            out << "    </Body>\n  </Function>\n";
+        }
+        else if (auto ifs = std::dynamic_pointer_cast<IfStatement>(stmt)) {
+            out << "  <If>\n";
+            out << "    <Condition/>\n"; // implement this properly
+            out << "    <Then>\n";
+            writeASTToXML(ifs->thenBranch, out);
+            out << "    </Then>\n";
+            if (!ifs->elseBranch.empty()) {
+                out << "    <Else>\n";
+                writeASTToXML(ifs->elseBranch, out);
+                out << "    </Else>\n";
+            }
+            out << "  </If>\n";
+        }
+        else if (auto assign = std::dynamic_pointer_cast<Assignment>(stmt)) {
+            out << "  <Assignment>\n";
+            out << "    <Target>" << assign->name << "</Target>\n";
+            if (auto num = std::dynamic_pointer_cast<NumberExpr>(assign->value)) {
+                out << "    <Value type=\"Number\">" << num->value << "</Value>\n";
+            } else if (auto id = std::dynamic_pointer_cast<IdentifierExpr>(assign->value)) {
+                out << "    <Value type=\"Identifier\">" << id->name << "</Value>\n";
+            }
+            out << "  </Assignment>\n";
+        }
+    }
+    out << "</Program>\n";
+}
 
 //--------------------------------------------------
 // --- MAIN: FULL COMPILER TEST HARNESS ---
