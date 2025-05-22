@@ -116,6 +116,11 @@ struct FieldAccess : public Expression {
     std::string field;
 };
 
+struct EnumDef : public Statement {
+    std::string name;
+    std::vector<std::string> variants;
+};
+
 //--------------------------------------------------
 // --- PARSER IMPLEMENTATION ---
 //--------------------------------------------------
