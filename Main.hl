@@ -1,0 +1,10 @@
+Start myFunc(x, y) {
+    if (x > y) {
+        result = x;
+    } else {
+        result = y;
+    }
+    Return;
+}
+
+z = myFunc(10, 5);
