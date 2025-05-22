@@ -401,3 +401,167 @@ int main() {
     log.close();
     return 0;
 }
+
+// hyperlace_compiler_core.cpp
+// --- Hyperlace Compiler: Core Pipeline Bootstrapping ---
+// Implements lexer, parser, AST, macro engine, semantic analyzer, IR emitter, NASM backend, and debug logger.
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <memory>
+#include <cctype>
+#include <stdexcept>
+#include <set>
+#include <iomanip> // For formatting debug output
+
+// ... [rest of code remains unchanged until main() below] ...
+
+//--------------------------------------------------
+// --- AST XML EMITTER ---
+//--------------------------------------------------
+class ASTXMLWriter {
+public:
+    void emit(const std::vector<std::shared_ptr<Statement>>& statements, const std::string& path) {
+        std::ofstream out(path);
+        if (!out) throw std::runtime_error("Failed to open .ast file");
+
+        out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+";
+        out << "<program>
+";
+        for (const auto& stmt : statements) {
+            if (auto assign = std::dynamic_pointer_cast<Assignment>(stmt)) {
+                out << "  <assignment var=\"" << assign->name << "\">";
+                if (auto num = std::dynamic_pointer_cast<NumberExpr>(assign->value)) {
+                    out << "<number>" << num->value << "</number>";
+                } else if (auto id = std::dynamic_pointer_cast<IdentifierExpr>(assign->value)) {
+                    out << "<identifier>" << id->name << "</identifier>";
+                }
+                out << "</assignment>
+";
+            }
+        }
+        out << "</program>
+";
+    }
+};
+
+//--------------------------------------------------
+// --- MAIN: FULL COMPILER TEST HARNESS ---
+//--------------------------------------------------
+#include <chrono>
+int main() {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    std::ifstream file("samples/hello.hl");
+    if (!file) {
+        std::cerr << "Failed to open sample file." << std::endl;
+        return 1;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string raw_input = buffer.str();
+
+    MacroExpander expander;
+    expander.loadDefaults();
+
+    std::string expanded = expander.expand(raw_input);
+    Lexer lexer(expanded);
+
+    std::ofstream log("output/hello.log");
+    if (!log) {
+        std::cerr << "Failed to open debug log." << std::endl;
+        return 1;
+    }
+
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    log << "Hyperlace Compiler Debug Log
+";
+    log << "Timestamp: " << std::ctime(&now);
+    log << "----------------------------------------
+
+";
+
+    log << "[Source Code]
+" << raw_input << "
+
+";
+    log << "[Expanded Code]
+" << expanded << "
+
+";
+
+    log << "[Tokens]\n";
+    for (const auto& token : tokens) {
+        log << std::setw(4) << token.line << ":" << std::setw(2) << token.column << "\t"
+            << static_cast<int>(token.type) << "\t" << token.lexeme << "\n";
+    }
+
+    Parser parser(tokens);
+    auto statements = parser.parse();
+    log << "\n[AST]\n";
+    for (const auto& stmt : statements) {
+        if (auto assign = std::dynamic_pointer_cast<Assignment>(stmt)) {
+            log << "Assign to " << assign->name << " <- ";
+            if (auto num = std::dynamic_pointer_cast<NumberExpr>(assign->value)) {
+                log << "NUM(" << num->value << ")\n";
+            } else if (auto id = std::dynamic_pointer_cast<IdentifierExpr>(assign->value)) {
+                log << "REF(" << id->name << ")\n";
+            }
+        }
+    }
+
+    SemanticAnalyzer analyzer;
+    try {
+        analyzer.analyze(statements);
+        std::cout << "Semantic analysis successful.\n";
+        log << "\n[Semantic] Success\n";
+    } catch (const std::exception& ex) {
+        std::cerr << ex.what() << std::endl;
+        log << "\n[Semantic Error] " << ex.what() << "\n";
+        return 1;
+    }
+
+    IREmitter ir;
+    ir.emit(statements, "output/hello.fir");
+    log << "\n[IR] Emitted to hello.fir\n";
+
+    NASMGenerator nasm;
+    nasm.generate(statements, "output/hello.asm");
+    log << "[ASM] Emitted to hello.asm
+";
+
+    ASTXMLWriter astWriter;
+    astWriter.emit(statements, "output/hello.ast");
+    log << "[AST] XML written to output/hello.ast
+";
+
+    std::cout << "Parsed " << statements.size() << " statement(s).\n";
+    for (const auto& stmt : statements) {
+        if (auto assign = std::dynamic_pointer_cast<Assignment>(stmt)) {
+            std::cout << "Assignment to: " << assign->name << "\n";
+        }
+    }
+
+        log << "
+[Statistics]
+";
+    log << "Total Statements: " << statements.size() << "
+";
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    log << "Compile Time: " << duration << "ms
+";
+
+    log << "
+[Status] Compilation Completed.
+";
+    log.close();
+    return 0;
+}
