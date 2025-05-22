@@ -1,0 +1,6 @@
+Start add(a, b) {
+    sum = a + b;
+    Return sum;
+}
+
+z = add(5, 7);
